@@ -38,6 +38,10 @@ matrix:
           compiler: clang
           dist: trusty
           env: T=debug
+        - os: linux
+          compiler: gcc
+          dist: trusty
+          env: T=iconv
         - os: osx
           compiler: gcc
           env: T=debug
@@ -115,6 +119,13 @@ script:
              ./configure --enable-warnings --enable-werror $C
              make && make examples
              make test-nonflaky
+        fi
+    - |
+        if [ "$T" = "iconv" ]; then
+             source .travis-iconv-env.sh
+             ./configure --enable-debug --enable-werror $C
+             make && make examples
+             make TFLAGS=-n test-nonflaky
         fi
     - |
         if [ "$T" = "cmake" ]; then
