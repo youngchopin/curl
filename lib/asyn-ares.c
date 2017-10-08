@@ -314,12 +314,14 @@ CURLcode Curl_resolver_is_resolved(struct connectdata *conn,
     conn->async.os_specific;
   CURLcode result = CURLE_OK;
 
-  *dns = NULL;
+  if(dns)
+    *dns = NULL;
 
   waitperform(conn, 0);
 
   if(res && !res->num_pending) {
-    (void)Curl_addrinfo_callback(conn, res->last_status, res->temp_ai);
+    if(dns)
+      (void)Curl_addrinfo_callback(conn, res->last_status, res->temp_ai);
     /* temp_ai ownership is moved to the connection, so we need not free-up
        them */
     res->temp_ai = NULL;
@@ -329,7 +331,7 @@ CURLcode Curl_resolver_is_resolved(struct connectdata *conn,
       result = conn->bits.proxy?CURLE_COULDNT_RESOLVE_PROXY:
         CURLE_COULDNT_RESOLVE_HOST;
     }
-    else
+    else if(dns)
       *dns = conn->async.dns;
 
     destroy_async_data(&conn->async);
@@ -392,7 +394,7 @@ CURLcode Curl_resolver_wait_resolv(struct connectdata *conn,
       timeout_ms = 1000;
 
     waitperform(conn, timeout_ms);
-    result = Curl_resolver_is_resolved(conn, &temp_entry);
+    result = Curl_resolver_is_resolved(conn, entry?&temp_entry:NULL);
 
     if(result || conn->async.done)
       break;
